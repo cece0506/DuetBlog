@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { watch } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
@@ -94,34 +95,38 @@ async function syncToolPages() {
   }
 }
 
-const files = (await fs.readdir(CONTENT_DIR)).filter((f) => f.endsWith(".md"));
-const postItems = [];
+async function runImport() {
+  const files = (await fs.readdir(CONTENT_DIR)).filter((f) => f.endsWith(".md"));
+  const postItems = [];
+  const activeSlugs = new Set();
 
-for (const fileName of files) {
-  const sourcePath = path.join(CONTENT_DIR, fileName);
-  const sourceDir = path.dirname(sourcePath);
-  const raw = await fs.readFile(sourcePath, "utf8");
-  const { data, content } = matter(raw);
+  for (const fileName of files) {
+    const sourcePath = path.join(CONTENT_DIR, fileName);
+    const sourceDir = path.dirname(sourcePath);
+    const raw = await fs.readFile(sourcePath, "utf8");
+    const { data, content } = matter(raw);
 
-  const slug = fileName.replace(/\.md$/i, "");
-  const title = data.title || slug;
-  const date = data.date || new Date().toISOString().slice(0, 10);
-  const cover = await normalizeCover(
-    data.cover || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-    sourceDir,
-    slug,
-  );
-  const excerpt = data.excerpt || "";
-  const tags = Array.isArray(data.tags) ? data.tags : [];
-  const normalizedContent = await rewriteMarkdownAssets(content, sourceDir, slug);
+    const slug = fileName.replace(/\.md$/i, "");
+    activeSlugs.add(slug);
+    const title = data.title || slug;
+    const date = data.date || new Date().toISOString().slice(0, 10);
+    const cover = await normalizeCover(
+      data.cover || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+      sourceDir,
+      slug,
+    );
+    const excerpt = data.excerpt || "";
+    const tags = Array.isArray(data.tags) ? data.tags : [];
+    const normalizedContent = await rewriteMarkdownAssets(content, sourceDir, slug);
 
-  const html = marked.parse(normalizedContent);
-  const page = `<!DOCTYPE html>
+    const html = marked.parse(normalizedContent);
+    const page = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body class="post-body">
@@ -137,13 +142,44 @@ for (const fileName of files) {
 </body>
 </html>`;
 
-  await fs.writeFile(path.join(POSTS_DIR, `${slug}.html`), page, "utf8");
+    await fs.writeFile(path.join(POSTS_DIR, `${slug}.html`), page, "utf8");
 
-  postItems.push({ slug, title, date, cover, excerpt, tags });
+    postItems.push({ slug, title, date, cover, excerpt, tags });
+  }
+
+  const existingHtmlFiles = (await fs.readdir(POSTS_DIR)).filter((f) => f.endsWith(".html"));
+  for (const htmlFile of existingHtmlFiles) {
+    const slug = htmlFile.replace(/\.html$/i, "");
+    if (!activeSlugs.has(slug)) {
+      await fs.unlink(path.join(POSTS_DIR, htmlFile));
+      console.log(`Removed orphaned post: ${htmlFile}`);
+    }
+  }
+
+  postItems.sort((a, b) => new Date(b.date) - new Date(a.date));
+  await fs.writeFile(OUTPUT_JSON, `${JSON.stringify(postItems, null, 2)}\n`, "utf8");
+  await syncToolPages();
+
+  console.log(`Imported ${postItems.length} markdown posts.`);
 }
 
-postItems.sort((a, b) => new Date(b.date) - new Date(a.date));
-await fs.writeFile(OUTPUT_JSON, `${JSON.stringify(postItems, null, 2)}\n`, "utf8");
-await syncToolPages();
+await runImport();
 
-console.log(`Imported ${postItems.length} markdown posts.`);
+if (process.argv.includes("--watch")) {
+  console.log(`Watching ${path.relative(process.cwd(), CONTENT_DIR)} for changes...`);
+  let debounceTimer = null;
+  watch(CONTENT_DIR, { persistent: true }, (_eventType, filename) => {
+    if (!filename) {
+      return;
+    }
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      console.log(`\nDetected change: ${filename} — re-importing...`);
+      try {
+        await runImport();
+      } catch (error) {
+        console.error("Import failed:", error);
+      }
+    }, 300);
+  });
+}

@@ -53,22 +53,20 @@ function buildCluster(posts: PostItem[], startIndex: number) {
 function fillLane(lane: HTMLElement, chunks: string[]) {
   lane.innerHTML = chunks.join("");
   const viewport = lane.parentElement?.clientWidth || window.innerWidth;
-  while (lane.scrollWidth < viewport * 1.4) {
+  while (lane.scrollWidth < viewport * 1.08) {
     lane.innerHTML += chunks.join("");
   }
 }
 
 function renderGallery(posts: PostItem[]) {
   const laneA = document.getElementById("gallery-lane-a");
-  const laneB = document.getElementById("gallery-lane-b");
-  if (!laneA || !laneB || posts.length === 0) {
+  if (!laneA || posts.length === 0) {
     return;
   }
 
-  const clusterCount = Math.min(5, Math.max(3, posts.length));
+  const clusterCount = Math.max(2, Math.ceil(Math.max(1, posts.length) / 2));
   const clusters = Array.from({ length: clusterCount }, (_, index) => buildCluster(posts, index));
   fillLane(laneA, clusters);
-  fillLane(laneB, clusters.slice().reverse());
 }
 
 function renderPostCards(posts: PostItem[]) {

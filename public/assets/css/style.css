@@ -386,36 +386,54 @@ img {
   background: linear-gradient(160deg, rgba(195, 250, 245, 0.75), rgba(255, 255, 255, 0.9));
 }
 
-.mini-stack {
+.smear-stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.smear-strip {
   position: relative;
-  height: 120px;
-  margin: 18px 0 22px;
-}
-
-.mini-stack span {
-  position: absolute;
-  inset: 0;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.92);
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.mini-stack span:nth-child(1) {
-  transform: rotate(-8deg) translateY(12px);
-}
-
-.mini-stack span:nth-child(2) {
-  transform: rotate(4deg) translate(8px, -2px);
-}
-
-.mini-stack span:nth-child(3) {
+  min-height: 116px;
   display: grid;
   place-items: center;
+  isolation: isolate;
 }
 
-.stack-card p:last-child {
-  color: #31405e;
-  line-height: 1.6;
+.smear-strip::before,
+.smear-strip::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 38px;
+  background: rgba(255, 255, 255, 0.9);
+  /* box-shadow: var(--ring) 0 0 0 1px, 0 9px 18px rgba(28, 28, 30, 0.05); */
+}
+
+.smear-strip::before {
+  transform: rotate(-4.2deg) translate(-3px, 2px);
+}
+
+.smear-strip::after {
+  transform: rotate(3.8deg) translate(4px, -1px);
+}
+
+.smear-strip-top {
+  transform: rotate(-1.8deg);
+  padding: 40px 20px;
+}
+
+.smear-strip-bottom {
+  transform: rotate(2.2deg);
+}
+
+.smear-strip img {
+  position: relative;
+  z-index: 1;
+  width: 74%;
+  max-width: 180px;
+  height: auto;
+  /* filter: drop-shadow(0 6px 10px rgba(28, 28, 30, 0.1)); */
 }
 
 .floating-note {
@@ -429,6 +447,29 @@ img {
 
 .memo-title {
   color: rgba(28, 28, 30, 0.52);
+}
+
+.showcase-date-display {
+  margin-top: 10px;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.showcase-date-main {
+  font-family: "Space Grotesk", "Noto Sans", sans-serif;
+  font-size: clamp(34px, 4.8vw, 54px);
+  line-height: 0.94;
+  letter-spacing: -0.06em;
+  color: rgba(28, 28, 30, 0.94);
+  text-shadow: 0 10px 18px rgba(91, 118, 254, 0.12);
+}
+
+.showcase-date-meta {
+  font-size: 13px;
+  color: rgba(28, 28, 30, 0.66);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .glance-band {
@@ -641,8 +682,8 @@ img {
 
 .gallery-cluster {
   display: grid;
-  grid-template-columns: repeat(2, 132px);
-  grid-template-rows: repeat(2, 132px);
+  grid-template-columns: repeat(2, 88px);
+  grid-template-rows: repeat(2, 88px);
   gap: 12px;
 }
 
@@ -1218,8 +1259,8 @@ img {
   }
 
   .gallery-cluster {
-    grid-template-columns: repeat(2, 108px);
-    grid-template-rows: repeat(2, 108px);
+    grid-template-columns: repeat(2, 72px);
+    grid-template-rows: repeat(2, 72px);
   }
 }
 
@@ -1237,9 +1278,9 @@ img {
   }
 
   .gallery-cluster {
-    grid-template-columns: repeat(2, 92px);
-    grid-template-rows: repeat(2, 92px);
-    gap: 10px;
+    grid-template-columns: repeat(2, 62px);
+    grid-template-rows: repeat(2, 62px);
+    gap: 8px;
   }
 
   .post-article {

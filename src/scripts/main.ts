@@ -173,7 +173,7 @@ function initPencilCursor() {
   };
 
   const createWave = (intensity = 1) => {
-    const points = pointerHistory.slice(-18);
+    const points = pointerHistory.slice(-10);
     if (points.length < 4) {
       return;
     }
@@ -339,10 +339,6 @@ function initPencilCursor() {
   const setCursorPosition = (clientX: number, clientY: number) => {
     pointerX = clientX;
     pointerY = clientY;
-    pointerHistory.push({ x: pointerX, y: pointerY });
-    if (pointerHistory.length > 28) {
-      pointerHistory.shift();
-    }
     cursor.style.left = `${pointerX}px`;
     cursor.style.top = `${pointerY}px`;
     cursor.classList.add("is-visible");
@@ -354,13 +350,20 @@ function initPencilCursor() {
   window.addEventListener("resize", resizeCanvas, { passive: true });
   document.addEventListener("pointermove", (event) => {
     setCursorPosition(event.clientX, event.clientY);
+    pointerHistory.push({ x: event.clientX, y: event.clientY });
+    if (pointerHistory.length > 14) {
+      pointerHistory.shift();
+    }
     const now = performance.now();
     if (now - lastWaveStamp > 64) {
       createWave(1 + (frame % 3));
       lastWaveStamp = now;
     }
   }, { passive: true });
-  document.addEventListener("pointerenter", (event) => setCursorPosition(event.clientX, event.clientY), { passive: true });
+  document.addEventListener("pointerenter", (event) => {
+    setCursorPosition(event.clientX, event.clientY);
+    pointerHistory.length = 0;
+  }, { passive: true });
   document.addEventListener("pointerdown", () => createStars());
   document.addEventListener("wheel", (event) => {
     createScrollRings(event.deltaY);

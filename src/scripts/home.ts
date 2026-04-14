@@ -33,6 +33,23 @@ function shorten(text: string, max = 20) {
   return text.length <= max ? text : `${text.slice(0, max)}...`;
 }
 
+function setShowcaseDate() {
+  const dateNode = document.getElementById("showcase-date");
+  if (!dateNode) {
+    return;
+  }
+
+  const today = new Date();
+  const yearText = `${today.getFullYear()}年`
+  const dateText = `${String(today.getMonth() + 1).padStart(2, "0")}月${String(today.getDate()).padStart(2, "0")}日`;
+  const weekText = today.toLocaleDateString("zh-CN", { weekday: "long" });
+  dateNode.innerHTML = `
+    <div class="showcase-date-main">${yearText}</div>
+    <strong class="showcase-date-main">${dateText}</strong>
+    <span class="showcase-date-meta">${weekText}</span>
+  `;
+}
+
 async function loadPosts() {
   const response = await fetch("/data/posts.json");
   if (!response.ok) {
@@ -247,8 +264,10 @@ async function initHomeCalendar() {
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
+    setShowcaseDate();
     void initHomeCalendar();
   }, { once: true });
 } else {
+  setShowcaseDate();
   void initHomeCalendar();
 }

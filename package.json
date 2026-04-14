@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "concurrently --kill-others \"node ./tools/import-md.mjs --watch\" \"astro dev\"",
     "build": "npm run import:md && astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
     "@types/node": "^22.15.3",
+    "concurrently": "^9.2.1",
     "typescript": "^5.9.3"
   }
 }
