@@ -1,0 +1,16 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="48" fill="#FFF8F1"/>
+  <circle cx="978" cy="164" r="112" fill="#C3FAF5"/>
+  <circle cx="210" cy="636" r="148" fill="#FFD8F4"/>
+  <rect x="132" y="108" width="542" height="430" rx="34" fill="#FFFFFF" stroke="#E0E2E8" stroke-width="8"/>
+  <rect x="174" y="166" width="368" height="28" rx="14" fill="#1C1C1E" fill-opacity="0.1"/>
+  <rect x="174" y="226" width="292" height="22" rx="11" fill="#5B76FE" fill-opacity="0.18"/>
+  <rect x="174" y="274" width="408" height="18" rx="9" fill="#1C1C1E" fill-opacity="0.08"/>
+  <rect x="174" y="314" width="356" height="18" rx="9" fill="#1C1C1E" fill-opacity="0.08"/>
+  <rect x="174" y="354" width="438" height="18" rx="9" fill="#1C1C1E" fill-opacity="0.08"/>
+  <rect x="174" y="404" width="180" height="74" rx="22" fill="#FFC6C6"/>
+  <rect x="740" y="222" width="276" height="324" rx="30" fill="#FFFFFF" stroke="#E0E2E8" stroke-width="8"/>
+  <rect x="786" y="280" width="184" height="184" rx="34" fill="#FFE6CD"/>
+  <path d="M881 312L910 382L986 389L928 435L946 510L881 470L816 510L834 435L776 389L852 382L881 312Z" fill="#5B76FE" fill-opacity="0.72"/>
+  <text x="174" y="632" fill="#1C1C1E" fill-opacity="0.75" font-family="Noto Sans, sans-serif" font-size="48">duet paper / local asset preview</text>
+</svg>

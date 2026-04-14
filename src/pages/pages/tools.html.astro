@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tools - Duet</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="top-nav">
+      <a class="brand" href="/">DUET<small>visual notes</small></a>
+      <div class="nav-links">
+        <a data-nav-link href="/">首页</a>
+        <a data-nav-link href="/pages/blog.html">博客</a>
+        <div class="tools-nav-group">
+          <a data-nav-link href="/pages/tools.html">工具</a>
+          <div class="tools-nav-menu" data-tools-menu></div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="tools-page-head">
+      <span class="kicker">Tools Gateway</span>
+      <h1 class="section-title tools-title">可直接访问的工具页面</h1>
+      <p class="tools-subtitle">
+        这里会自动读取 data/tools.json。后续你只要增加工具条目并放入 HTML 文件，即可从这里进入。
+      </p>
+      <div class="tools-grid" id="tools-grid"></div>
+    </section>
+  </div>
+
+  <script src="../../scripts/main.ts"></script>
+  <script src="../../scripts/tools.ts"></script>
+</body>
+</html>

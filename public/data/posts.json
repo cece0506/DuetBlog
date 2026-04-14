@@ -1,0 +1,45 @@
+[
+  {
+    "slug": "daily-handbook-light",
+    "title": "Daily Handbook Light",
+    "date": "2026-04-12",
+    "cover": "/uploads/posts/daily-handbook-light/duet-paper.svg",
+    "excerpt": "把灵感、计划和情绪折叠进同一页手账，用视觉秩序陪伴一天。",
+    "tags": [
+      "journal",
+      "design"
+    ]
+  },
+  {
+    "slug": "morning-grid-ritual",
+    "title": "Morning Grid Ritual",
+    "date": "2026-04-10",
+    "cover": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
+    "excerpt": "一个 15 分钟晨间网格仪式，让待办、灵感与专注在同一张纸上对齐。",
+    "tags": [
+      "routine",
+      "mindset"
+    ]
+  },
+  {
+    "slug": "soft-notes-in-rain",
+    "title": "Soft Notes In Rain",
+    "date": "2026-04-06",
+    "cover": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1200&q=80",
+    "excerpt": "雨天是最适合写字的背景音，磨砂玻璃下的文字会更安静。",
+    "tags": [
+      "writing",
+      "rainy-day"
+    ]
+  },
+  {
+    "slug": "test",
+    "title": "My First Blog",
+    "date": "2026-03-06",
+    "cover": "/uploads/posts/test/2026-03-06.png",
+    "excerpt": "‌沐浴在五颜六色灯光照耀下的建筑，一个人看的时候只觉得是浪费电，但是和她一起看的话，一定会觉得美丽非凡 ",
+    "tags": [
+      "movie"
+    ]
+  }
+]

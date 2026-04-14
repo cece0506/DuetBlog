@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog - Duet</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="top-nav">
+      <a class="brand" href="/">DUET<small>visual notes</small></a>
+      <div class="nav-links">
+        <a data-nav-link href="/">首页</a>
+        <a data-nav-link href="/pages/blog.html">博客</a>
+        <div class="tools-nav-group">
+          <a data-nav-link href="/pages/tools.html">工具</a>
+          <div class="tools-nav-menu" data-tools-menu></div>
+        </div>
+      </div>
+    </nav>
+
+    <header class="blog-head">
+      <span class="kicker">Curated Writings</span>
+      <p class="quote">WE DESIGN THE DAY, THEN THE DAY DESIGNS US.</p>
+      <p class="blog-subtitle">多行小卡片无边界滚动，鼠标划入暂停并聚焦当前内容。</p>
+    </header>
+
+    <section class="blog-filter-bar">
+      <input id="blog-search" class="blog-search-input" type="search" placeholder="搜索博客标题或标签，例如 journal / rain" />
+      <div id="blog-tags" class="blog-tags"></div>
+    </section>
+
+    <section class="blog-gallery-shell">
+      <div class="gallery-lanes">
+        <div class="gallery-lane" id="gallery-lane-a"></div>
+        <div class="gallery-lane is-reverse" id="gallery-lane-b"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">最新文章</h2>
+      <p class="blog-result-count" id="blog-result-count"></p>
+      <div class="post-list" id="post-list"></div>
+    </section>
+
+    <section class="blog-date-nav-wrap">
+      <h2 class="section-title">按日期浏览</h2>
+      <div class="blog-date-nav" id="blog-date-nav"></div>
+    </section>
+  </div>
+
+  <script src="../../scripts/main.ts"></script>
+  <script src="../../scripts/blog.ts"></script>
+</body>
+</html>

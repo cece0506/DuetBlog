@@ -1,0 +1,25 @@
+{
+  "name": "duet-blog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "npm run import:md && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "import:md": "node ./tools/import-md.mjs",
+    "prepare": "npm run import:md"
+  },
+  "dependencies": {
+    "astro": "^5.4.2",
+    "gray-matter": "^4.0.3",
+    "marked": "^13.0.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.3"
+  }
+}

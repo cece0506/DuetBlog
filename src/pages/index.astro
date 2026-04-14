@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Duet Blog</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="top-nav">
+      <a class="brand" href="/">DUET<small>visual notes</small></a>
+      <div class="nav-links">
+        <a data-nav-link href="/">首页</a>
+        <a data-nav-link href="/pages/blog.html">博客</a>
+        <div class="tools-nav-group">
+          <a data-nav-link href="/pages/tools.html">工具</a>
+          <div class="tools-nav-menu" data-tools-menu></div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="showcase-home">
+      <section class="showcase-hero">
+        <div class="hero-copy editorial-card soft-white">
+          <span class="kicker">Display Landing</span>
+          <p class="eyebrow">DUET STUDIO NOTEBOOK</p>
+          <h1>把博客做成一块会呼吸的展示画布</h1>
+          <p class="hero-intro">
+            用轻快的 pastel 色、插画式几何块面和杂志感排版，把博客、工具和手账内容排成一张完整首页。
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="/pages/blog.html">Browse Journal</a>
+            <a class="btn" href="/pages/tools.html">Open Toolbox</a>
+          </div>
+        </div>
+
+        <div class="poster-board editorial-card peach-wave">
+          <div class="poster-chip">Pastel / Light / Editorial</div>
+          <div class="poster-grid">
+            <div class="poster-statement">
+              <span>Quiet tools,</span>
+              <span>colorful thoughts,</span>
+              <span>rainy routines.</span>
+            </div>
+            <div class="poster-orbit">
+              <div class="orbit-circle orbit-one"></div>
+              <div class="orbit-circle orbit-two"></div>
+              <div class="orbit-card orbit-note">NOTES</div>
+              <div class="orbit-card orbit-tool">TOOLS</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack-card editorial-card mint-layers">
+          <p class="stack-label">手账 / Blog / Archive</p>
+          <div class="mini-stack">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>像 Edi & P 那种彩色、轻盈、带插画感的首页气质，但保留 Miro 式的信息秩序。</p>
+        </div>
+
+        <div class="floating-note editorial-card lilac-note">
+          <p class="memo-title">SHOWCASE ONLY</p>
+          <p>这一页负责“第一眼惊艳”，内容展示交给博客页与工具页。</p>
+        </div>
+      </section>
+
+      <section class="glance-viewport">
+        <div class="glance-band" data-duplicate-track>
+          <article class="glance-card">
+            <strong>Visual blog</strong>
+            <span>模块化、柔和色、会流动的内容。</span>
+          </article>
+          <article class="glance-card">
+            <strong>Tool drop-down</strong>
+            <span>悬浮展开菜单，点击直接跳转。</span>
+          </article>
+          <article class="glance-card">
+            <strong>Local assets</strong>
+            <span>Markdown 可直接引用项目内图片。</span>
+          </article>
+          <article class="glance-card">
+            <strong>Journal mood</strong>
+            <span>手账气质和轻编辑设计结合。</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="showcase-grid">
+        <article class="editorial-card coral-panel">
+          <p class="panel-kicker">Daily Ritual</p>
+          <h2>早晨网格、雨天片段、桌面草图，都能被整理成同一个视觉系统。</h2>
+        </article>
+        <article class="editorial-card cream-panel">
+          <p class="panel-kicker">Curation</p>
+          <ul class="panel-list">
+            <li>首页负责展示氛围</li>
+            <li>博客页负责浏览与跳转</li>
+            <li>工具页负责访问所有 HTML 工具</li>
+          </ul>
+        </article>
+        <article class="editorial-card blue-panel">
+          <p class="panel-kicker">Small Quote</p>
+          <blockquote>Build a quiet place for loud ideas.</blockquote>
+        </article>
+      </section>
+
+      <section class="calendar-section editorial-card soft-white">
+        <div class="calendar-head">
+          <div>
+            <p class="panel-kicker">Publishing Calendar</p>
+            <h2>当月发布日程</h2>
+          </div>
+          <div class="calendar-controls">
+            <button type="button" class="calendar-nav-btn" id="calendar-prev-month">上月</button>
+            <select id="calendar-year-select" class="calendar-select"></select>
+            <select id="calendar-month-select" class="calendar-select"></select>
+            <button type="button" class="calendar-nav-btn" id="calendar-next-month">下月</button>
+          </div>
+        </div>
+        <div class="calendar-layout">
+          <div class="calendar-board" id="calendar-board"></div>
+        </div>
+        <div id="calendar-post-tooltip" class="calendar-post-tooltip" aria-hidden="true"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../scripts/main.ts"></script>
+  <script src="../scripts/home.ts"></script>
+</body>
+</html>
