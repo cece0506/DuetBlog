@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "concurrently --kill-others \"node ./tools/import-md.mjs --watch\" \"astro dev\"",
     "build": "npm run import:md && astro build",
-    "preview": "astro preview",
+    "preview": "npm run build && wrangler dev",
     "astro": "astro",
     "check": "astro check",
     "import:md": "node ./tools/import-md.mjs",
-    "prepare": "npm run import:md"
+    "prepare": "npm run import:md",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "12",
     "astro": "^5.4.2",
     "gray-matter": "^4.0.3",
     "marked": "^13.0.2"
@@ -21,6 +24,7 @@
     "@astrojs/check": "^0.9.8",
     "@types/node": "^22.15.3",
     "concurrently": "^9.2.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.82.2"
   }
 }
