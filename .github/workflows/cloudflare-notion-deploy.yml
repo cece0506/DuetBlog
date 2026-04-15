@@ -1,0 +1,22 @@
+name: Cloudflare Notion Deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0,12 * * *"
+
+jobs:
+  trigger-cloudflare-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages Deploy Hook
+        env:
+          CF_PAGES_DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$CF_PAGES_DEPLOY_HOOK" ]; then
+            echo "CF_PAGES_DEPLOY_HOOK is not set in repository secrets"
+            exit 1
+          fi
+
+          curl -X POST "$CF_PAGES_DEPLOY_HOOK"
+          echo "Cloudflare deploy hook triggered"

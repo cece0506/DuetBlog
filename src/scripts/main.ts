@@ -43,7 +43,7 @@ const COLORS = ["#ff8ea1", "#ffcf6e", "#66e3d3", "#6e93ff", "#ff91de"];
 
 function activateNavState() {
   const current = window.location.pathname || "/";
-  document.querySelectorAll<HTMLAnchorElement>(".nav-links a[data-nav-link]").forEach((anchor) => {
+  document.querySelectorAll<HTMLAnchorElement>(".nav-links a[data-nav-link], .side-nav a[data-nav-link]").forEach((anchor) => {
     const href = anchor.getAttribute("href") || "";
     const normalizedHref = href === "/" ? "/" : href.replace(/\/$/, "");
     const normalizedCurrent = current === "/" ? "/" : current.replace(/\/$/, "");

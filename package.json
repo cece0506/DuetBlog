@@ -4,18 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others \"node ./tools/import-md.mjs --watch\" \"astro dev\"",
-    "build": "npm run import:md && astro build",
+    "dev": "npm run sync:notion && astro dev",
+    "build": "npm run sync:notion && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "import:md": "node ./tools/import-md.mjs",
-    "prepare": "npm run import:md"
+    "sync:notion": "node ./tools/sync-notion.mjs",
+    "deploy:cloudflare-hook": "node ./tools/trigger-cloudflare-deploy.mjs",
+    "import:md": "node ./tools/sync-notion.mjs",
+    "prepare": "npm run sync:notion"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1030.0",
+    "@notionhq/client": "^5.18.0",
     "astro": "^5.4.2",
+    "axios": "^1.15.0",
     "gray-matter": "^4.0.3",
-    "marked": "^13.0.2"
+    "marked": "^13.0.2",
+    "notion-astro-loader": "^0.4.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",

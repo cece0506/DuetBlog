@@ -58,6 +58,43 @@ img {
   padding: 24px 24px 88px;
 }
 
+.side-nav {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 78;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 24px rgba(28, 28, 30, 0.08), var(--ring) 0 0 0 1px;
+}
+
+.side-nav a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 84px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(199, 202, 213, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.side-nav a:hover,
+.side-nav a.is-active {
+  transform: translateY(-1px);
+  background: rgba(91, 118, 254, 0.1);
+  border-color: rgba(91, 118, 254, 0.46);
+}
+
 .top-nav {
   position: sticky;
   top: 14px;
@@ -1228,6 +1265,21 @@ img {
 @media (max-width: 860px) {
   .site-shell {
     padding: 18px 14px 64px;
+  }
+
+  .side-nav {
+    right: 12px;
+    left: 12px;
+    top: auto;
+    bottom: 12px;
+    transform: none;
+    display: flex;
+    justify-content: center;
+  }
+
+  .side-nav a {
+    min-width: 76px;
+    font-size: 12px;
   }
 
   .top-nav {

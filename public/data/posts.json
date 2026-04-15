@@ -1,45 +1,15 @@
 [
   {
-    "slug": "daily-handbook-light",
-    "title": "Daily Handbook Light",
-    "date": "2026-04-12",
-    "cover": "/uploads/posts/daily-handbook-light/duet-paper.svg",
-    "excerpt": "把灵感、计划和情绪折叠进同一页手账，用视觉秩序陪伴一天。",
+    "slug": "notion slug",
+    "title": "one from notion",
+    "date": "2026-04-15",
+    "cover": "https://prod-files-secure.s3.us-west-2.amazonaws.com/e1d3bc3e-8838-4db5-95aa-85ecc1bf383c/45d23eb3-419d-4d07-9f5f-01f1eefa736a/%E6%8F%92%E7%94%BB%E8%89%BA%E6%9C%AF%E5%AE%B6%EF%BD%9CTatsuro_Kiuchi_3_%E8%91%B1%E5%A8%98_%E6%9D%A5%E8%87%AA%E5%B0%8F%E7%BA%A2%E4%B9%A6%E7%BD%91%E9%A1%B5%E7%89%88.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466XT6EPN4E%2F20260415%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20260415T091945Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCihjO%2BBk4uPUEh4soV9nYdpGyPlLdQjxUveYMJjpA11AIhAL%2B2%2FFBpW02pyoOS6wjC79xPKGOStzdpqZemOvtR2YDWKogECKH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjM3NDIzMTgzODA1IgyFwtq2L73uXGxxGfgq3ANeic73K961oSndM%2FhMNHjmA5TvE48Nf8TaDlKbIej31ZhjWARX76oo4u74vKRpxYioxGAKuj9%2FYcrvaZC12g%2FbumeW6N0wGKx%2BV3qW8OSjQpye8%2BBU%2B%2BDIkfOX%2BBta2oOMsisZdR%2BpUhesFcOLsR8Ga88u8O4pGH991IN2pTmmkFv25uI%2FbmhmR90G%2BcPOpCiqbWuOLkTRMn2C3O3ydm42haLYdLCcNQSOIyoNfXzDpSsX2xH5s9IUsRowDLlacOfCDlZfzn2cuQaT2wqonMuQRGKZd4R7U4RIMQdB7bbc1%2FsmppnsvbIVausYIwnp60KpjDI2JgJCMcYgkR%2Bluxj%2FrrHr3z7Az6G0%2Bo0sY%2FdR%2BJ5FmBt91wiuQPs%2Bhc%2BKNSBeQXX0evy01l0i6UGFfQt1IGDX84Z4a0F87oK5GTluS4NAkIFtg5dyqSKnnGjVFkn6bADARLWsvGJLdddrNHiPI%2F7sbkOO5%2Fz6c93NkEaauZ8g9VPxsLaFNMUI11WNkMcuu01vnWe3%2Bfr3voCmJa6dTSeppLq0LF98VSfHFAPCRFpjW6NAGAehvdTh6TSRaaFj9oVDi9hUk8soogs%2FhXdBj3zyNBxe0VsxHfLaZ%2F3j2KGd8DZVwLUMoSAHwjCmkv3OBjqkAXp%2B87aw7ZxjoHrWL3uDocphJq%2B01Oa%2BXiqnVsF0vKOdV40mq9Mz2OTzg4f8p2W2FG%2F4EmDNWVIBWiY2IgVoOEJa5ZfNxt3alONVhdYhauZ%2FxTe5uDroPqXtIbQxsWL3KAZU01FxzVD3WGKDzNQcW95LHJPcfxLOKVsnoXPtk9fkDhC%2FR91yYhBcWPHIJJDruIW0sincf9H2RxyH%2FZYBPodJdkGk&X-Amz-Signature=de42dc4bf6628b6760c37e852c4caca590d284d8f3f4d10337f544be33cedd45&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+    "excerpt": "notion excerpt",
     "tags": [
-      "journal",
-      "design"
-    ]
-  },
-  {
-    "slug": "morning-grid-ritual",
-    "title": "Morning Grid Ritual",
-    "date": "2026-04-10",
-    "cover": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
-    "excerpt": "一个 15 分钟晨间网格仪式，让待办、灵感与专注在同一张纸上对齐。",
-    "tags": [
-      "routine",
-      "mindset"
-    ]
-  },
-  {
-    "slug": "soft-notes-in-rain",
-    "title": "Soft Notes In Rain",
-    "date": "2026-04-06",
-    "cover": "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1200&q=80",
-    "excerpt": "雨天是最适合写字的背景音，磨砂玻璃下的文字会更安静。",
-    "tags": [
-      "writing",
-      "rainy-day"
-    ]
-  },
-  {
-    "slug": "test",
-    "title": "My First Blog",
-    "date": "2026-03-06",
-    "cover": "/uploads/posts/test/2026-03-06.png",
-    "excerpt": "‌沐浴在五颜六色灯光照耀下的建筑，一个人看的时候只觉得是浪费电，但是和她一起看的话，一定会觉得美丽非凡 ",
-    "tags": [
-      "movie"
-    ]
+      "notion",
+      "test"
+    ],
+    "notionId": "34372485-cfd4-8097-8796-dace1e03a5a0",
+    "notionUrl": "https://www.notion.so/one-from-notion-34372485cfd480978796dace1e03a5a0"
   }
 ]
