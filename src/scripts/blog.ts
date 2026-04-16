@@ -5,6 +5,7 @@ type PostItem = {
   title: string;
   date: string;
   cover: string;
+  path?: string;
   excerpt?: string;
   tags?: string[];
 };
@@ -12,6 +13,9 @@ type PostItem = {
 let allPosts: PostItem[] = [];
 let activeTag = "";
 let activeMonthKey = "";
+let currentPage = 1;
+
+const POSTS_PER_PAGE = 9;
 
 function formatDate(dateValue: string) {
   const date = new Date(dateValue);
@@ -29,6 +33,19 @@ async function loadPosts() {
   return (await response.json()) as PostItem[];
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function resolvePostPath(post: PostItem) {
+  return post.path || `/posts/${encodeURIComponent(post.slug)}.html`;
+}
+
 function buildCluster(posts: PostItem[], startIndex: number) {
   const cards = Array.from({ length: 4 }, (_, offset) => posts[(startIndex + offset) % posts.length]);
   return `
@@ -36,7 +53,7 @@ function buildCluster(posts: PostItem[], startIndex: number) {
       ${cards
         .map(
           (post, index) => `
-            <a class="gallery-bubble bubble-${index + 1}" href="/posts/${post.slug}.html">
+            <a class="gallery-bubble bubble-${index + 1}" href="${resolvePostPath(post)}">
               <img src="${post.cover}" alt="${post.title}" loading="lazy" />
               <div class="bubble-overlay">
                 <strong>${post.title}</strong>
@@ -72,31 +89,85 @@ function renderGallery(posts: PostItem[]) {
 function renderPostCards(posts: PostItem[]) {
   const container = document.getElementById("post-list");
   const result = document.getElementById("blog-result-count");
+  const pagination = document.getElementById("blog-pagination");
   if (!container || !result) {
     return;
   }
 
-  result.textContent = `共 ${posts.length} 篇`; 
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+  currentPage = Math.min(currentPage, totalPages);
+  const pageStart = (currentPage - 1) * POSTS_PER_PAGE;
+  const pagePosts = posts.slice(pageStart, pageStart + POSTS_PER_PAGE);
 
-  container.innerHTML = posts
-    .map(
-      (post) => `
+  result.textContent = `共 ${posts.length} 篇，当前第 ${currentPage} / ${totalPages} 页`;
+
+  if (pagePosts.length === 0) {
+    container.innerHTML = '<p class="post-list-empty">没有匹配的文章。</p>';
+  } else {
+    container.innerHTML = pagePosts
+      .map(
+        (post) => {
+          const safeTitle = escapeHtml(post.title);
+          const safeExcerpt = escapeHtml(post.excerpt || "Read more");
+          return `
         <article class="post-card">
-          <a href="/posts/${post.slug}.html">
-            <img src="${post.cover}" alt="${post.title}" loading="lazy" />
+          <a href="${resolvePostPath(post)}">
+            <img src="${post.cover}" alt="${safeTitle}" loading="lazy" />
             <div class="body">
-              <h3>${post.title}</h3>
+              <h3 class="post-card-title has-tooltip" data-tooltip="${safeTitle}">${safeTitle}</h3>
               <p class="post-date">${formatDate(post.date)}</p>
               <div class="post-tags-inline">
-                ${(post.tags || []).map((tag) => `<span class="tag-chip">#${tag}</span>`).join("")}
+                ${(post.tags || []).map((tag) => `<span class="tag-chip">#${escapeHtml(tag)}</span>`).join("")}
               </div>
-              <p>${post.excerpt || "Read more"}</p>
+              <p class="post-card-excerpt has-tooltip" data-tooltip="${safeExcerpt}">${safeExcerpt}</p>
             </div>
           </a>
         </article>
-      `,
-    )
-    .join("");
+      `;
+        },
+      )
+      .join("");
+  }
+
+  if (!pagination) {
+    return;
+  }
+
+  if (posts.length <= POSTS_PER_PAGE) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  const buttons = Array.from({ length: totalPages }, (_, index) => {
+    const page = index + 1;
+    return `<button class="blog-page-btn ${page === currentPage ? "is-active" : ""}" data-page="${page}">${page}</button>`;
+  }).join("");
+
+  pagination.innerHTML = `
+    <button class="blog-page-btn" data-page-nav="prev" ${currentPage === 1 ? "disabled" : ""}>上一页</button>
+    ${buttons}
+    <button class="blog-page-btn" data-page-nav="next" ${currentPage === totalPages ? "disabled" : ""}>下一页</button>
+  `;
+
+  pagination.querySelectorAll<HTMLButtonElement>("[data-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentPage = Number(button.dataset.page || currentPage);
+      renderPostCards(posts);
+    });
+  });
+
+  pagination.querySelectorAll<HTMLButtonElement>("[data-page-nav]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.pageNav;
+      if (action === "prev") {
+        currentPage = Math.max(1, currentPage - 1);
+      }
+      if (action === "next") {
+        currentPage = Math.min(totalPages, currentPage + 1);
+      }
+      renderPostCards(posts);
+    });
+  });
 }
 
 function monthKey(dateValue: string) {
@@ -165,6 +236,7 @@ function applyFilters() {
     return keywordHit && activeTagHit && monthHit;
   });
 
+  currentPage = 1;
   const targetPosts = filtered.length > 0 ? filtered : allPosts.slice(0, Math.min(6, allPosts.length));
   renderGallery(targetPosts.length > 0 ? targetPosts : allPosts);
   renderPostCards(filtered);

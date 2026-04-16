@@ -7,8 +7,8 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/assets/css/style.css" />
 </head>
-<body>
-  <div class="site-shell">
+<body class="has-tree-sidebar">
+  <div class="site-shell site-shell-with-tree">
     <nav class="top-nav">
       <a class="brand" href="/">DUET<small>visual notes</small></a>
       <div class="nav-links">
@@ -25,6 +25,13 @@
       <a data-nav-link href="/">首页</a>
       <a data-nav-link href="/pages/blog.html">博客</a>
       <a data-nav-link href="/pages/tools.html">工具</a>
+      <button type="button" class="side-nav-top" data-scroll-top aria-label="回到顶部">顶部</button>
+    </aside>
+
+    <aside class="tree-sidebar" id="blog-tree-sidebar" aria-label="博客目录侧边栏">
+      <button type="button" class="tree-sidebar-toggle" data-tree-toggle aria-expanded="true" aria-label="收起博客目录">目录</button>
+      <div class="tree-sidebar-title">博客目录</div>
+      <div class="tree-sidebar-body" data-tree-body></div>
     </aside>
 
     <header class="blog-head">
@@ -48,6 +55,7 @@
       <h2 class="section-title">最新文章</h2>
       <p class="blog-result-count" id="blog-result-count"></p>
       <div class="post-list" id="post-list"></div>
+      <div class="blog-pagination" id="blog-pagination"></div>
     </section>
 
     <section class="blog-date-nav-wrap">
@@ -58,5 +66,6 @@
 
   <script src="../../scripts/main.ts"></script>
   <script src="../../scripts/blog.ts"></script>
+  <script is:inline src="/assets/js/blog-tree.js"></script>
 </body>
 </html>

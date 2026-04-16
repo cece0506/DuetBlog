@@ -133,7 +133,7 @@ async function runImport() {
   <main class="post-article-wrap">
     <article class="post-article">
       <a class="post-back" href="../pages/blog.html">Back To Blog</a>
-      <h1>${title}</h1>
+      <h1 class="post-title">${title}</h1>
       <p class="post-meta">${date}</p>
       <img class="post-cover" src="${cover}" alt="${title}" loading="lazy" />
       <section class="post-content">${html}</section>

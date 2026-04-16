@@ -3,7 +3,7 @@ import path from "node:path";
 import axios from "axios";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-const NOTION_IMAGE_RE = /https?:\/\/[^\s"'()<>]+(?:secure\.notion-static\.com|s3\.amazonaws\.com)[^\s"'()<>]*/gi;
+const NOTION_IMAGE_RE = /https?:\/\/[^\s"'()<>]+(?:secure\.notion-static\.com|prod-files-secure\.s3\.[^\s"'()<>]+\.amazonaws\.com|s3\.[^\s"'()<>]+\.amazonaws\.com|s3\.amazonaws\.com)[^\s"'()<>]*/gi;
 const ASTRO_IMAGE_PROXY_RE = /\/\_image\?[^"'<>]*href=([^&"'<>]+)[^"'<>]*/gi;
 const DEFAULT_PUBLIC_BASE_URL = "https://duet-blog-images.duetpalace.top";
 const DEFAULT_CONCURRENCY = 4;
@@ -47,7 +47,7 @@ function createR2Client(config) {
 }
 
 function isNotionTemporaryImage(url) {
-  return /secure\.notion-static\.com|s3\.amazonaws\.com/i.test(url);
+  return /secure\.notion-static\.com|prod-files-secure\.s3\.|s3\.[^.]+\.amazonaws\.com|s3\.amazonaws\.com/i.test(url);
 }
 
 function getYearMonth(publishedAt) {
@@ -96,6 +96,14 @@ function stripTrackingParams(url) {
   }
 }
 
+function decodeHtmlEntities(input) {
+  return input
+    .replace(/&#x26;/gi, "&")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#x3D;/gi, "=")
+    .replace(/&#61;/gi, "=");
+}
+
 async function mapWithConcurrency(items, concurrency, worker) {
   const queue = [...items];
   const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
@@ -112,11 +120,12 @@ async function mapWithConcurrency(items, concurrency, worker) {
 }
 
 export async function downloadAndUpload(notionImageUrl, options = {}) {
-  if (!isNotionTemporaryImage(notionImageUrl)) {
+  const normalizedInput = decodeHtmlEntities(notionImageUrl || "");
+  if (!isNotionTemporaryImage(normalizedInput)) {
     return notionImageUrl;
   }
 
-  const cacheKey = stripTrackingParams(notionImageUrl);
+  const cacheKey = stripTrackingParams(normalizedInput);
   const cached = uploadCache.get(cacheKey);
   if (cached) {
     return cached;
@@ -126,7 +135,7 @@ export async function downloadAndUpload(notionImageUrl, options = {}) {
     const config = resolveConfig();
     const client = createR2Client(config);
 
-    const response = await axios.get(notionImageUrl, {
+    const response = await axios.get(normalizedInput, {
       responseType: "arraybuffer",
       timeout: 20000,
       maxRedirects: 5,
@@ -137,7 +146,7 @@ export async function downloadAndUpload(notionImageUrl, options = {}) {
     const fileBuffer = Buffer.from(response.data);
     const md5 = createHash("md5").update(fileBuffer).digest("hex");
 
-    const ext = extensionFromContentType(contentType) || extensionFromUrl(notionImageUrl) || "bin";
+    const ext = extensionFromContentType(contentType) || extensionFromUrl(normalizedInput) || "bin";
     const { year, month } = getYearMonth(options.publishedAt);
     const key = `${year}/${month}/${md5}.${ext}`;
 
@@ -183,7 +192,7 @@ export async function processImagesInContent(htmlContent, options = {}) {
     }
   }
 
-  const uniqueUrls = Array.from(new Set([...directMatches, ...proxyUrlMap.values()]));
+  const uniqueUrls = Array.from(new Set([...directMatches, ...proxyUrlMap.values()].map((url) => decodeHtmlEntities(url))));
   if (uniqueUrls.length === 0 && proxyUrlMap.size === 0) {
     return htmlContent;
   }
@@ -202,6 +211,10 @@ export async function processImagesInContent(htmlContent, options = {}) {
   let output = htmlContent;
   for (const [from, to] of replacements) {
     output = output.split(from).join(to);
+    const encodedAmp = from.replace(/&/g, "&#x26;");
+    const encodedAmpAlt = from.replace(/&/g, "&amp;");
+    output = output.split(encodedAmp).join(to);
+    output = output.split(encodedAmpAlt).join(to);
   }
 
   for (const [proxyMatch, notionUrl] of proxyUrlMap) {
