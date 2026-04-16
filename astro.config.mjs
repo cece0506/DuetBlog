@@ -14,7 +14,7 @@ export default defineConfig({
       },
       {
         protocol: "https",
-        hostname: "img.duetpalace.top",
+        hostname: "duet-blog-images.duetpalace.top",
       },
     ],
   },

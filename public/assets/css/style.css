@@ -936,6 +936,47 @@ img {
   color: var(--slate);
 }
 
+.post-detail-meta {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(91, 118, 254, 0.24);
+  background: rgba(91, 118, 254, 0.06);
+}
+
+.post-detail-meta p,
+.post-detail-tags {
+  color: #2f3140;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.post-detail-meta strong,
+.post-detail-tags strong {
+  color: #3341a6;
+  margin-right: 6px;
+}
+
+.post-detail-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.post-detail-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 118, 254, 0.36);
+  background: rgba(255, 255, 255, 0.8);
+  color: #3442a6;
+  font-size: 12px;
+}
+
 .post-cover {
   margin-top: 18px;
   width: 100%;

@@ -3,29 +3,15 @@ import path from "node:path";
 import axios from "axios";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-export type R2SyncConfig = {
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucketName: string;
-  endpoint: string;
-  publicBaseUrl: string;
-  region?: string;
-};
-
-export type ProcessImagesOptions = {
-  publishedAt?: Date | string;
-  concurrency?: number;
-};
-
 const NOTION_IMAGE_RE = /https?:\/\/[^\s"'()<>]+(?:secure\.notion-static\.com|s3\.amazonaws\.com)[^\s"'()<>]*/gi;
 const ASTRO_IMAGE_PROXY_RE = /\/\_image\?[^"'<>]*href=([^&"'<>]+)[^"'<>]*/gi;
 const DEFAULT_PUBLIC_BASE_URL = "https://duet-blog-images.duetpalace.top";
 const DEFAULT_CONCURRENCY = 4;
 
-const uploadCache = new Map<string, Promise<string>>();
+const uploadCache = new Map();
 
-function getEnv(name: string): string | undefined {
-  const value = process.env[name] || (import.meta.env?.[name] as string | undefined);
+function getEnv(name) {
+  const value = process.env[name];
   if (!value) {
     return undefined;
   }
@@ -33,7 +19,7 @@ function getEnv(name: string): string | undefined {
   return value.trim().replace(/^"|"$/g, "").replace(/^'|'$/g, "");
 }
 
-function resolveConfig(): R2SyncConfig {
+function resolveConfig() {
   const accessKeyId = getEnv("R2_ACCESS_KEY_ID") || "";
   const secretAccessKey = getEnv("R2_SECRET_ACCESS_KEY") || "";
   const bucketName = getEnv("R2_BUCKET_NAME") || "";
@@ -48,7 +34,7 @@ function resolveConfig(): R2SyncConfig {
   return { accessKeyId, secretAccessKey, bucketName, endpoint, publicBaseUrl, region };
 }
 
-function createR2Client(config: R2SyncConfig) {
+function createR2Client(config) {
   return new S3Client({
     region: config.region || "auto",
     endpoint: config.endpoint,
@@ -60,11 +46,11 @@ function createR2Client(config: R2SyncConfig) {
   });
 }
 
-function isNotionTemporaryImage(url: string): boolean {
+function isNotionTemporaryImage(url) {
   return /secure\.notion-static\.com|s3\.amazonaws\.com/i.test(url);
 }
 
-function getYearMonth(publishedAt?: Date | string) {
+function getYearMonth(publishedAt) {
   const date = publishedAt ? new Date(publishedAt) : new Date();
   const validDate = Number.isNaN(date.getTime()) ? new Date() : date;
   const year = String(validDate.getFullYear());
@@ -72,12 +58,12 @@ function getYearMonth(publishedAt?: Date | string) {
   return { year, month };
 }
 
-function extensionFromContentType(contentType?: string): string | undefined {
+function extensionFromContentType(contentType) {
   if (!contentType) {
     return undefined;
   }
   const normalized = contentType.split(";")[0].trim().toLowerCase();
-  const map: Record<string, string> = {
+  const map = {
     "image/jpeg": "jpg",
     "image/jpg": "jpg",
     "image/png": "png",
@@ -91,7 +77,7 @@ function extensionFromContentType(contentType?: string): string | undefined {
   return map[normalized];
 }
 
-function extensionFromUrl(url: string): string | undefined {
+function extensionFromUrl(url) {
   try {
     const pathname = new URL(url).pathname;
     const ext = path.extname(pathname).replace(".", "").toLowerCase();
@@ -101,7 +87,7 @@ function extensionFromUrl(url: string): string | undefined {
   }
 }
 
-function stripTrackingParams(url: string): string {
+function stripTrackingParams(url) {
   try {
     const parsed = new URL(url);
     return `${parsed.origin}${parsed.pathname}`;
@@ -110,11 +96,7 @@ function stripTrackingParams(url: string): string {
   }
 }
 
-async function mapWithConcurrency<T>(
-  items: T[],
-  concurrency: number,
-  worker: (item: T) => Promise<void>,
-) {
+async function mapWithConcurrency(items, concurrency, worker) {
   const queue = [...items];
   const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
     while (queue.length > 0) {
@@ -129,10 +111,7 @@ async function mapWithConcurrency<T>(
   await Promise.all(runners);
 }
 
-export async function downloadAndUpload(
-  notionImageUrl: string,
-  options: ProcessImagesOptions = {},
-): Promise<string> {
+export async function downloadAndUpload(notionImageUrl, options = {}) {
   if (!isNotionTemporaryImage(notionImageUrl)) {
     return notionImageUrl;
   }
@@ -147,7 +126,7 @@ export async function downloadAndUpload(
     const config = resolveConfig();
     const client = createR2Client(config);
 
-    const response = await axios.get<ArrayBuffer>(notionImageUrl, {
+    const response = await axios.get(notionImageUrl, {
       responseType: "arraybuffer",
       timeout: 20000,
       maxRedirects: 5,
@@ -181,17 +160,14 @@ export async function downloadAndUpload(
   }
 }
 
-export async function processImagesInContent(
-  htmlContent: string,
-  options: ProcessImagesOptions = {},
-): Promise<string> {
+export async function processImagesInContent(htmlContent, options = {}) {
   if (!htmlContent) {
     return htmlContent;
   }
 
   const directMatches = htmlContent.match(NOTION_IMAGE_RE) || [];
   const proxyMatches = Array.from(htmlContent.matchAll(ASTRO_IMAGE_PROXY_RE));
-  const proxyUrlMap = new Map<string, string>();
+  const proxyUrlMap = new Map();
   for (const match of proxyMatches) {
     const encoded = match[1];
     if (!encoded) {
@@ -212,7 +188,7 @@ export async function processImagesInContent(
     return htmlContent;
   }
 
-  const replacements = new Map<string, string>();
+  const replacements = new Map();
   await mapWithConcurrency(uniqueUrls, options.concurrency || DEFAULT_CONCURRENCY, async (url) => {
     try {
       const uploadedUrl = await downloadAndUpload(url, options);

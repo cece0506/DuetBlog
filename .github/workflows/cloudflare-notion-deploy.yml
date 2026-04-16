@@ -3,6 +3,7 @@ name: Cloudflare Notion Deploy
 on:
   workflow_dispatch:
   schedule:
+    # GitHub Actions uses UTC. 00:00/12:00 UTC == 北京时间 08:00/20:00
     - cron: "0 0,12 * * *"
 
 jobs:
@@ -20,3 +21,17 @@ jobs:
 
           curl -X POST "$CF_PAGES_DEPLOY_HOOK"
           echo "Cloudflare deploy hook triggered"
+
+      - name: Notify Deploy Failure
+        if: failure()
+        env:
+          DEPLOY_NOTIFY_WEBHOOK: ${{ secrets.DEPLOY_NOTIFY_WEBHOOK }}
+        run: |
+          if [ -z "$DEPLOY_NOTIFY_WEBHOOK" ]; then
+            echo "DEPLOY_NOTIFY_WEBHOOK is not set; skip notification"
+            exit 0
+          fi
+
+          curl -X POST "$DEPLOY_NOTIFY_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d '{"text":"Cloudflare 自动部署触发失败，请检查 GitHub Actions 日志。"}'

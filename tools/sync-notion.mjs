@@ -7,7 +7,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
-import { downloadAndUpload, processImagesInContent } from "../src/lib/r2-sync.ts";
+import { downloadAndUpload, processImagesInContent } from "./r2-sync.mjs";
 
 const { Client, iteratePaginatedAPI, isFullBlock, isFullPage } = notionSdk;
 
@@ -149,6 +149,55 @@ function syncLogFilePath() {
   return path.join(LOG_DIR, `notion-sync-${stamp}.json`);
 }
 
+function getStatusPropertyName(properties) {
+  const direct = ["Status", "status", "状态"].find((name) => properties[name]);
+  if (direct) {
+    return direct;
+  }
+  const byType = Object.entries(properties).find(([, property]) => property?.type === "status" || property?.type === "select");
+  return byType?.[0];
+}
+
+async function sendFailureNotification(message, detail = {}) {
+  const webhook = getEnv("SYNC_NOTIFY_WEBHOOK");
+  if (!webhook) {
+    console.warn(`[sync-notion] ${message}`, detail);
+    return;
+  }
+
+  try {
+    await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: message,
+        detail,
+        source: "sync-notion",
+        at: new Date().toISOString(),
+      }),
+    });
+  } catch (error) {
+    console.warn("[sync-notion] notify webhook failed", error);
+  }
+}
+
+async function markPagePublishFailed(client, pageId, statusPropertyName, propertyType) {
+  if (!statusPropertyName) {
+    return;
+  }
+
+  const updateValue = propertyType === "select"
+    ? { select: { name: "Published Failed" } }
+    : { status: { name: "Published Failed" } };
+
+  await client.pages.update({
+    page_id: pageId,
+    properties: {
+      [statusPropertyName]: updateValue,
+    },
+  });
+}
+
 const processor = unified()
   .use(notionRehype, {})
   .use(rehypeSlug)
@@ -191,7 +240,7 @@ async function renderPageHtml(client, page) {
   for await (const block of listBlocks(client, page.id)) {
     blocks.push(block);
   }
-  const vFile = processor.process({ data: blocks });
+  const vFile = await processor.process({ data: blocks });
   return vFile.toString();
 }
 
@@ -240,60 +289,77 @@ async function fetchNotionPosts() {
     }
 
     const properties = page.properties || {};
-    const title = textFromProperty(
-      findPropertyByType(properties, "title") || pickProperty(properties, "Title", "Name", "title", "标题", "名称"),
-    ) || "未命名文章";
-    const slug = textFromProperty(
-      pickProperty(properties, "Slug", "slug", "链接", "短链", "Path"),
-    ) || toSlug(title);
-    const date = dateFromProperty(
-      pickProperty(properties, "Date", "date", "日期", "Published", "PublishDate", "发布时间") ||
-      findPropertyByType(properties, "date", "created_time"),
-    );
-    const status = statusFromProperty(
-      pickProperty(properties, "Status", "status", "状态") || findPropertyByType(properties, "status", "select"),
-    );
+    const statusProperty = pickProperty(properties, "Status", "status", "状态") || findPropertyByType(properties, "status", "select");
+    const status = statusFromProperty(statusProperty);
     const isHidden = hiddenFromProperty(
       pickProperty(properties, "Hidden", "hidden", "隐藏", "isHidden"),
-    );
-    const tags = tagsFromProperty(
-      pickProperty(properties, "Tags", "tags", "标签") || findPropertyByType(properties, "multi_select"),
     );
 
     if (status.toLowerCase() !== "published" || isHidden) {
       continue;
     }
 
-    let cover =
-      fileUrlFromObject(page.cover) ||
-      fileUrlFromProperty(pickProperty(properties, "CoverImage", "Cover", "cover", "封面图", "封面") || findPropertyByType(properties, "files")) ||
-      undefined;
+    try {
+      const title = textFromProperty(
+        findPropertyByType(properties, "title") || pickProperty(properties, "Title", "Name", "title", "标题", "名称"),
+      ) || "未命名文章";
+      const slug = textFromProperty(
+        pickProperty(properties, "Slug", "slug", "链接", "短链", "Path"),
+      ) || toSlug(title);
+      const date = dateFromProperty(
+        pickProperty(properties, "Date", "date", "日期", "Published", "PublishDate", "发布时间") ||
+        findPropertyByType(properties, "date", "created_time"),
+      );
+      const tags = tagsFromProperty(
+        pickProperty(properties, "Tags", "tags", "标签") || findPropertyByType(properties, "multi_select"),
+      );
 
-    if (cover) {
-      try {
-        cover = await downloadAndUpload(cover, { publishedAt: date });
-      } catch (error) {
-        console.warn("[sync-notion] cover upload failed, using original url", error);
+      let cover =
+        fileUrlFromObject(page.cover) ||
+        fileUrlFromProperty(pickProperty(properties, "CoverImage", "Cover", "cover", "封面图", "封面") || findPropertyByType(properties, "files")) ||
+        undefined;
+
+      if (cover) {
+        try {
+          cover = await downloadAndUpload(cover, { publishedAt: date });
+        } catch (error) {
+          console.warn("[sync-notion] cover upload failed, using original url", error);
+        }
       }
+
+      const html = await renderPageHtml(client, page);
+      const processedBody = await processImagesInContent(html, { publishedAt: date, concurrency: 5 });
+      const excerpt = textFromProperty(
+        pickProperty(properties, "excerpt", "Excerpt", "摘要") || findPropertyByType(properties, "rich_text"),
+      ) || stripHtml(processedBody).slice(0, 150);
+
+      posts.push({
+        slug,
+        title,
+        date,
+        cover,
+        excerpt,
+        tags,
+        notionId: page.id,
+        notionUrl: page.url,
+        body: processedBody,
+      });
+    } catch (error) {
+      const statusPropertyName = getStatusPropertyName(properties);
+      const statusPropertyType = statusProperty?.type === "select" ? "select" : "status";
+      try {
+        await markPagePublishFailed(client, page.id, statusPropertyName, statusPropertyType);
+      } catch (updateError) {
+        console.warn("[sync-notion] failed to update status to Published Failed", updateError);
+      }
+
+      await sendFailureNotification("Notion 博客发布失败，状态已回写 Published Failed", {
+        pageId: page.id,
+        pageUrl: page.url,
+        reason: String(error),
+      });
+      console.error("[sync-notion] page publish failed", page.id, error);
     }
-
-    const html = await renderPageHtml(client, page);
-    const processedBody = await processImagesInContent(html, { publishedAt: date, concurrency: 5 });
-    const excerpt = textFromProperty(
-      pickProperty(properties, "excerpt", "Excerpt", "摘要") || findPropertyByType(properties, "rich_text"),
-    ) || stripHtml(processedBody).slice(0, 150);
-
-    posts.push({
-      slug,
-      title,
-      date,
-      cover,
-      excerpt,
-      tags,
-      notionId: page.id,
-      notionUrl: page.url,
-      body: processedBody,
-    });
   }
 
   posts.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -301,6 +367,7 @@ async function fetchNotionPosts() {
 }
 
 function renderPostPage(post) {
+  const tagsHtml = (post.tags || []).map((tag) => `<span class="post-detail-tag">${tag}</span>`).join("");
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -319,9 +386,14 @@ function renderPostPage(post) {
   <main class="post-article-wrap">
     <article class="post-article">
       <a class="post-back" href="../pages/blog.html">Back To Blog</a>
+      ${post.cover ? `<img class="post-cover" src="${post.cover}" alt="${post.title}" loading="lazy" />` : ""}
       <h1>${post.title}</h1>
       <p class="post-meta">${post.date}</p>
-      ${post.cover ? `<img class="post-cover" src="${post.cover}" alt="${post.title}" loading="lazy" />` : ""}
+      <div class="post-detail-meta">
+        <p><strong>短链 Slug：</strong>${post.slug || "-"}</p>
+        <p><strong>摘要 Excerpt：</strong>${post.excerpt || "-"}</p>
+        <div class="post-detail-tags"><strong>标签 Tags：</strong>${tagsHtml || "-"}</div>
+      </div>
       <section class="post-content">${post.body}</section>
     </article>
   </main>
