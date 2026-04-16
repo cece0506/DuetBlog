@@ -171,26 +171,6 @@ function buildPostOutputPath(post) {
   return path.join(POSTS_DIR, year, month, day, `${post.slug}.html`);
 }
 
-function buildLegacyPostOutputPath(post) {
-  return path.join(POSTS_DIR, `${post.slug}.html`);
-}
-
-function renderLegacyRedirectPage(targetPath) {
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=${targetPath}" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting...</title>
-  <script>window.location.replace(${JSON.stringify(targetPath)});</script>
-</head>
-<body>
-  <p>Redirecting to <a href="${targetPath}">${targetPath}</a></p>
-</body>
-</html>`;
-}
-
 async function listHtmlFilesRecursive(dirPath) {
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
   const files = [];
@@ -753,6 +733,7 @@ function renderPostPage(post) {
       </nav>
     </article>
   </main>
+  <script src="/assets/js/cursor-effects.js"></script>
   <script src="/assets/js/blog-tree.js"></script>
 </body>
 </html>`;
@@ -776,12 +757,9 @@ async function writeArtifacts(posts) {
 
   for (const post of postsWithPaths) {
     const datedOutputPath = buildPostOutputPath(post);
-    const legacyOutputPath = buildLegacyPostOutputPath(post);
     await fs.mkdir(path.dirname(datedOutputPath), { recursive: true });
     await fs.writeFile(datedOutputPath, renderPostPage(post), "utf8");
-    await fs.writeFile(legacyOutputPath, renderLegacyRedirectPage(post.path), "utf8");
     activeHtmlPaths.add(datedOutputPath);
-    activeHtmlPaths.add(legacyOutputPath);
   }
 
   const existingHtmlFiles = await listHtmlFilesRecursive(POSTS_DIR);

@@ -345,7 +345,7 @@ img {
 }
 
 .site-shell-with-tree {
-  padding-left: 334px;
+  padding-left: 55px;
 }
 
 .side-nav a:hover,
@@ -1431,6 +1431,22 @@ img {
   color: #2f3140;
   list-style-position: inside;
   padding: 1px 6px;
+}
+
+.post-content blockquote {
+  position: relative;
+  padding-left: 20px;
+}
+
+.post-content blockquote::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: currentColor;
+  border-radius: 999px;
 }
 
 .post-content a {

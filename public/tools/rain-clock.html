@@ -207,9 +207,27 @@
         right: 20%;
       }
     </style>
-  <style>[data-home-link="true"]{position:fixed;top:16px;left:16px;z-index:9999;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.24);color:#fff;text-decoration:none;font:500 13px/1.2 Noto Sans,sans-serif;backdrop-filter:blur(8px)}</style></head>
-  <body><a data-home-link="true" href="/">返回首页</a>
-    <a class="home-link" href="/">返回首页</a>
+    <style>
+      [data-home-link="true"] {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 9999;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: rgba(0, 0, 0, 0.24);
+        color: #fff;
+        text-decoration: none;
+        font:
+          500 13px/1.2 Noto Sans,
+          sans-serif;
+        backdrop-filter: blur(8px);
+      }
+    </style>
+  </head>
+  <body>
+    <a data-home-link="true" href="/">返回首页</a>
     <canvas id="rain-canvas"></canvas>
 
     <div class="glow glow-blue"></div>

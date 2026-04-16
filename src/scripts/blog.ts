@@ -108,7 +108,7 @@ function renderPostCards(posts: PostItem[]) {
       .map(
         (post) => {
           const safeTitle = escapeHtml(post.title);
-          const safeExcerpt = escapeHtml(post.excerpt || "Read more");
+          const safeExcerpt = escapeHtml(post.excerpt || "Read More");
           return `
         <article class="post-card">
           <a href="${resolvePostPath(post)}">

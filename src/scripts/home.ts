@@ -5,6 +5,7 @@ type PostItem = {
   title: string;
   date: string;
   cover: string;
+  path?: string;
   excerpt?: string;
   tags?: string[];
 };
@@ -56,6 +57,10 @@ async function loadPosts() {
     throw new Error("无法读取 posts.json");
   }
   return (await response.json()) as PostItem[];
+}
+
+function resolvePostPath(post: PostItem) {
+  return post.path || `/posts/${encodeURIComponent(post.slug)}.html`;
 }
 
 function buildYearMonthSelectors() {
@@ -194,8 +199,8 @@ function buildCalendar() {
       .map((post) => `
         <a
           class="calendar-post-title"
-          href="/posts/${post.slug}.html"
-          data-href="/posts/${post.slug}.html"
+          href="${resolvePostPath(post)}"
+          data-href="${resolvePostPath(post)}"
           data-title="${escapeHtml(post.title)}"
           data-date="${post.date}"
           data-excerpt="${escapeHtml(post.excerpt || "")}" 
