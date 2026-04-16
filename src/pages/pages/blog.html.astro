@@ -1,3 +1,19 @@
+---
+import fs from "node:fs/promises";
+import path from "node:path";
+
+let showGalleryIntro = false;
+
+try {
+  const postsPath = path.join(process.cwd(), "public", "data", "posts.json");
+  const content = await fs.readFile(postsPath, "utf8");
+  const posts = JSON.parse(content);
+  showGalleryIntro = Array.isArray(posts) && posts.length > 20;
+} catch {
+  showGalleryIntro = false;
+}
+---
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -37,10 +53,10 @@
     <header class="blog-head">
       <span class="kicker">Curated Writings</span>
       <p class="quote">WE DESIGN THE DAY, THEN THE DAY DESIGNS US.</p>
-      <p class="blog-subtitle">多行小卡片无边界滚动，鼠标划入暂停并聚焦当前内容。</p>
+      <p id="blog-subtitle" class="blog-subtitle" hidden={!showGalleryIntro}>多行小卡片无边界滚动，鼠标划入暂停并聚焦当前内容。</p>
     </header>
 
-    <section class="blog-gallery-shell">
+    <section id="blog-gallery-shell" class="blog-gallery-shell" hidden={!showGalleryIntro}>
       <div class="gallery-lanes">
         <div class="gallery-lane" id="gallery-lane-a"></div>
       </div>

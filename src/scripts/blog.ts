@@ -14,8 +14,24 @@ let allPosts: PostItem[] = [];
 let activeTag = "";
 let activeMonthKey = "";
 let currentPage = 1;
+let galleryEnabled = false;
 
 const POSTS_PER_PAGE = 9;
+
+function setGalleryVisibility(isVisible: boolean) {
+  galleryEnabled = isVisible;
+
+  const subtitle = document.getElementById("blog-subtitle");
+  const galleryShell = document.getElementById("blog-gallery-shell");
+
+  if (subtitle instanceof HTMLElement) {
+    subtitle.hidden = !isVisible;
+  }
+
+  if (galleryShell instanceof HTMLElement) {
+    galleryShell.hidden = !isVisible;
+  }
+}
 
 function formatDate(dateValue: string) {
   const date = new Date(dateValue);
@@ -77,7 +93,10 @@ function fillLane(lane: HTMLElement, chunks: string[]) {
 
 function renderGallery(posts: PostItem[]) {
   const laneA = document.getElementById("gallery-lane-a");
-  if (!laneA || posts.length === 0) {
+  if (!galleryEnabled || !laneA || posts.length === 0) {
+    if (laneA) {
+      laneA.innerHTML = "";
+    }
     return;
   }
 
@@ -247,6 +266,7 @@ function applyFilters() {
 async function initBlogPage() {
   try {
     allPosts = await loadPosts();
+    setGalleryVisibility(allPosts.length > 20);
     const searchInput = document.getElementById("blog-search") as HTMLInputElement | null;
     if (searchInput) {
       searchInput.addEventListener("input", () => applyFilters());
