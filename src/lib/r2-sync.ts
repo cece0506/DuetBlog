@@ -19,7 +19,7 @@ export type ProcessImagesOptions = {
 
 const NOTION_IMAGE_RE = /https?:\/\/[^\s"'()<>]+(?:secure\.notion-static\.com|s3\.amazonaws\.com)[^\s"'()<>]*/gi;
 const ASTRO_IMAGE_PROXY_RE = /\/\_image\?[^"'<>]*href=([^&"'<>]+)[^"'<>]*/gi;
-const DEFAULT_PUBLIC_BASE_URL = "https://duet-blog-images.duetpalace.top";
+const DEFAULT_PUBLIC_BASE_URL = "https://img.duetpalace.top";
 const DEFAULT_CONCURRENCY = 4;
 
 const uploadCache = new Map<string, Promise<string>>();

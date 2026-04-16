@@ -1419,7 +1419,8 @@ img {
 
 .post-content h1,
 .post-content h2,
-.post-content h3 {
+.post-content h3,
+.post-content h4 {
   margin-top: 12px;
   font-family: "Space Grotesk", sans-serif;
   letter-spacing: -0.04em;
@@ -1526,10 +1527,113 @@ img {
   margin-top: 5px;
 }
 
-.post-content img {
-  width: 100%;
-  border-radius: 18px;
+/* --- 图片单张：30% 宽居中，可点击放大 --- */
+.post-content .notion-image {
+  display: flex;
+  justify-content: center;
+}
+
+.post-content .notion-image img {
+  width: 30%;
+  min-width: 80px;
+  border-radius: 14px;
   border: 1px solid rgba(224, 226, 232, 0.9);
+  cursor: zoom-in;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-content .notion-image img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(28, 28, 30, 0.14);
+}
+
+/* --- 连续图片一行最多三张 --- */
+.post-content .notion-img-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.post-content .notion-img-row .notion-image {
+  flex: 1 1 calc(33.333% - 10px);
+  max-width: calc(33.333% - 10px);
+  justify-content: flex-start;
+}
+
+.post-content .notion-img-row .notion-image img {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 旧路径兜底：column_list 里的图片不二次限宽 */
+.post-content .notion-column img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(224, 226, 232, 0.9);
+}
+
+/* --- Lightbox 遮罩 --- */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(10, 10, 16, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.lightbox-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.lightbox-overlay img {
+  max-width: min(90vw, 1100px);
+  max-height: 88vh;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: default;
+  transform: scale(0.94);
+  transition: transform 0.22s ease;
+  pointer-events: none;
+}
+
+.lightbox-overlay.is-visible img {
+  transform: scale(1);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.15s ease;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .post-content table {

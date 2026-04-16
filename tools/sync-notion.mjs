@@ -277,7 +277,32 @@ async function saveSyncState(state) {
   await fs.writeFile(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
-function shouldUseIncrementalSync(state, cache) {
+async function safeUnlink(filePath) {
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+}
+
+async function resetSyncOutputs() {
+  await fs.rm(POSTS_DIR, { recursive: true, force: true });
+  await fs.mkdir(POSTS_DIR, { recursive: true });
+  await Promise.all([
+    safeUnlink(OUTPUT_JSON),
+    safeUnlink(OUTPUT_GENERATED),
+    safeUnlink(CACHE_FILE),
+    safeUnlink(STATE_FILE),
+  ]);
+}
+
+function shouldUseIncrementalSync(state, cache, forceFullSync = false) {
+  if (forceFullSync) {
+    return "";
+  }
+
   const incrementalEnabled = getEnv("NOTION_INCREMENTAL_SYNC") !== "false";
   if (!incrementalEnabled || !state?.lastSuccessfulSyncAt) {
     return "";
@@ -328,7 +353,6 @@ async function queryNotionPages(client, notionDatabaseId, editedSince = "") {
     }
     pages.push(page);
   }
-
   return pages;
 }
 
@@ -590,6 +614,7 @@ async function buildPostFromPage(client, page, fallbackCovers, cachedPost) {
 
   const html = await renderPageHtml(client, page);
   const processedBody = await processImagesInContent(html, { publishedAt: date, concurrency: 5 });
+  const groupedBody = groupConsecutiveImages(processedBody);
   const excerpt = textFromProperty(
     pickProperty(properties, "excerpt", "Excerpt", "摘要") || findPropertyByType(properties, "rich_text"),
   ) || stripHtml(processedBody).slice(0, 150);
@@ -603,11 +628,63 @@ async function buildPostFromPage(client, page, fallbackCovers, cachedPost) {
     tags,
     notionId: pageId,
     notionUrl: page.url,
-    body: processedBody,
+    body: groupedBody,
   };
 }
 
-async function fetchNotionPosts() {
+function groupConsecutiveImages(html) {
+  const IMAGE_RE = /(<div class="notion-image">[\s\S]*?<\/div>)/g;
+
+  const parts = [];
+  let cursor = 0;
+  let match;
+  IMAGE_RE.lastIndex = 0;
+
+  while ((match = IMAGE_RE.exec(html)) !== null) {
+    if (match.index > cursor) {
+      const between = html.slice(cursor, match.index);
+      if (between.trim()) {
+        parts.push({ type: "text", html: between });
+      } else {
+        parts.push({ type: "ws", html: between });
+      }
+    }
+    const withLightbox = match[0].replace(/<img /, '<img data-lightbox ');
+    parts.push({ type: "img", html: withLightbox });
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor < html.length) {
+    parts.push({ type: "text", html: html.slice(cursor) });
+  }
+
+  const merged = [];
+  let imgRun = [];
+
+  const flushImages = () => {
+    if (imgRun.length === 0) return;
+    for (let i = 0; i < imgRun.length; i += 3) {
+      merged.push(`<div class="notion-img-row">${imgRun.slice(i, i + 3).join("")}</div>`);
+    }
+    imgRun = [];
+  };
+
+  for (const part of parts) {
+    if (part.type === "img") {
+      imgRun.push(part.html);
+    } else if (part.type === "ws") {
+      // pure whitespace between images – treat as consecutive
+    } else {
+      flushImages();
+      merged.push(part.html);
+    }
+  }
+  flushImages();
+
+  return merged.join("");
+}
+
+async function fetchNotionPosts(forceFullSync = false) {
   const notionToken = getEnv("NOTION_TOKEN");
   const notionDatabaseId = getEnv("NOTION_DATABASE_ID");
   if (!notionToken || !notionDatabaseId) {
@@ -618,7 +695,7 @@ async function fetchNotionPosts() {
   const cache = await loadSyncCache();
   const state = await loadSyncState();
   const fallbackCovers = await listFallbackCovers();
-  const editedSince = shouldUseIncrementalSync(state, cache);
+  const editedSince = shouldUseIncrementalSync(state, cache, forceFullSync);
   const pages = await queryNotionPages(client, notionDatabaseId, editedSince);
   const nextCacheEntries = editedSince ? normalizeCacheEntries(cache.entries) : {};
 
@@ -627,6 +704,13 @@ async function fetchNotionPosts() {
   for (const page of pages) {
     const pageId = page.id;
     const lastEditedTime = page.last_edited_time || "";
+
+    // Skip pages moved to Notion's trash
+    if (page.archived || page.in_trash) {
+      delete nextCacheEntries[pageId];
+      continue;
+    }
+
     const pageState = isPublishedAndVisible(page);
 
     if (!pageState.visible) {
@@ -735,6 +819,48 @@ function renderPostPage(post) {
   </main>
   <script src="/assets/js/cursor-effects.js"></script>
   <script src="/assets/js/blog-tree.js"></script>
+  <script>
+    (function () {
+      var overlay = document.createElement("div");
+      overlay.className = "lightbox-overlay";
+      var img = document.createElement("img");
+      var closeBtn = document.createElement("button");
+      closeBtn.className = "lightbox-close";
+      closeBtn.setAttribute("aria-label", "关闭");
+      closeBtn.textContent = "×";
+      overlay.appendChild(img);
+      overlay.appendChild(closeBtn);
+      document.body.appendChild(overlay);
+
+      function open(src, alt) {
+        img.src = src;
+        img.alt = alt || "";
+        overlay.classList.add("is-visible");
+        document.body.style.overflow = "hidden";
+      }
+
+      function close() {
+        overlay.classList.remove("is-visible");
+        document.body.style.overflow = "";
+        setTimeout(function () { img.src = ""; }, 250);
+      }
+
+      overlay.addEventListener("click", function (e) {
+        if (e.target !== img) close();
+      });
+      closeBtn.addEventListener("click", close);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") close();
+      });
+
+      document.querySelectorAll(".post-content img[data-lightbox]").forEach(function (el) {
+        el.style.cursor = "zoom-in";
+        el.addEventListener("click", function () {
+          open(el.src, el.alt);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>`;
 }
@@ -789,9 +915,15 @@ async function writeArtifacts(posts) {
 
 let previousDigest = "";
 
-async function runSync() {
+async function runSync(options = {}) {
+  const { forceFullSync = false, shouldResetOutputs = false } = options;
+
   await cleanupOldLogs();
-  const posts = await fetchNotionPosts();
+  if (shouldResetOutputs) {
+    await resetSyncOutputs();
+  }
+
+  const posts = await fetchNotionPosts(forceFullSync);
   const digest = JSON.stringify(posts);
   if (digest === previousDigest) {
     console.log(`[sync-notion] No content changes (${posts.length} posts)`);
@@ -805,7 +937,11 @@ async function runSync() {
   console.log(`[sync-notion] Synced ${posts.length} posts from Notion`);
 }
 
-await runSync();
+const cliArgs = new Set(process.argv.slice(2));
+const forceFullSync = cliArgs.has("--full");
+const shouldResetOutputs = cliArgs.has("--reset");
+
+await runSync({ forceFullSync, shouldResetOutputs });
 
 if (process.argv.includes("--watch")) {
   const pollMs = Number(getEnv("NOTION_POLL_MS") || "") || DEFAULT_POLL_MS;
