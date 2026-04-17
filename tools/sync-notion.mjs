@@ -277,6 +277,57 @@ async function saveSyncState(state) {
   await fs.writeFile(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
+async function verifyCloudflareToken(accountId, apiToken) {
+  const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/tokens/verify`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Cloudflare token verify failed (${response.status}): ${text}`);
+  }
+}
+
+async function purgeCloudflareCache() {
+  const apiToken = getEnv("CF_API_TOKEN");
+  const accountId = getEnv("ACCOUNT_ID");
+  const zoneId = getEnv("CF_ZONE_ID");
+
+  if (!apiToken || !accountId || !zoneId) {
+    return;
+  }
+
+  await verifyCloudflareToken(accountId, apiToken);
+
+  const purgeUrls = (getEnv("CF_PURGE_URLS") || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const payload = purgeUrls.length > 0
+    ? { files: purgeUrls }
+    : { purge_everything: true };
+
+  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Cloudflare cache purge failed (${response.status}): ${text}`);
+  }
+
+  console.log(`[sync-notion] Cloudflare cache purged (${purgeUrls.length > 0 ? "url-list" : "purge-everything"})`);
+}
+
 async function safeUnlink(filePath) {
   try {
     await fs.unlink(filePath);
@@ -488,6 +539,23 @@ async function markPagePublishFailed(client, pageId, statusPropertyName, propert
   });
 }
 
+async function markPagePublished(client, pageId, statusPropertyName, propertyType) {
+  if (!statusPropertyName) {
+    return;
+  }
+
+  const updateValue = propertyType === "select"
+    ? { select: { name: "Published" } }
+    : { status: { name: "Published" } };
+
+  await client.pages.update({
+    page_id: pageId,
+    properties: {
+      [statusPropertyName]: updateValue,
+    },
+  });
+}
+
 const processor = unified()
   .use(notionRehype, {})
   .use(rehypeSlug)
@@ -567,13 +635,18 @@ function isPublishedAndVisible(page) {
   const properties = page.properties || {};
   const statusProperty = pickProperty(properties, "Status", "status", "状态") || findPropertyByType(properties, "status", "select");
   const status = statusFromProperty(statusProperty);
+  const statusLower = status.toLowerCase();
   const isHidden = hiddenFromProperty(pickProperty(properties, "Hidden", "hidden", "隐藏", "isHidden"));
+  const shouldPublish = statusLower === "ready";
+  const isAlreadyPublished = statusLower === "published";
   return {
     properties,
     statusProperty,
     status,
+    statusLower,
     isHidden,
-    visible: status.toLowerCase() === "published" && !isHidden,
+    shouldPublish,
+    visible: (shouldPublish || isAlreadyPublished) && !isHidden,
   };
 }
 
@@ -738,13 +811,21 @@ async function fetchNotionPosts(forceFullSync = false) {
         lastEditedTime,
         post,
       };
+
+      if (pageState.shouldPublish) {
+        const statusPropertyName = getStatusPropertyName(pageState.properties);
+        const statusPropertyType = pageState.statusProperty?.type === "select" ? "select" : "status";
+        await markPagePublished(client, page.id, statusPropertyName, statusPropertyType);
+      }
     } catch (error) {
-      const statusPropertyName = getStatusPropertyName(pageState.properties);
-      const statusPropertyType = pageState.statusProperty?.type === "select" ? "select" : "status";
-      try {
-        await markPagePublishFailed(client, page.id, statusPropertyName, statusPropertyType);
-      } catch (updateError) {
-        console.warn("[sync-notion] failed to update status to Published Failed", updateError);
+      if (pageState.shouldPublish) {
+        const statusPropertyName = getStatusPropertyName(pageState.properties);
+        const statusPropertyType = pageState.statusProperty?.type === "select" ? "select" : "status";
+        try {
+          await markPagePublishFailed(client, page.id, statusPropertyName, statusPropertyType);
+        } catch (updateError) {
+          console.warn("[sync-notion] failed to update status to Published Failed", updateError);
+        }
       }
 
       await sendFailureNotification("Notion 博客发布失败，状态已回写 Published Failed", {
@@ -928,12 +1009,22 @@ async function runSync(options = {}) {
   if (digest === previousDigest) {
     console.log(`[sync-notion] No content changes (${posts.length} posts)`);
     await syncToolPages();
+    try {
+      await purgeCloudflareCache();
+    } catch (error) {
+      console.warn("[sync-notion] Cloudflare cache purge skipped/failed", error);
+    }
     return;
   }
 
   previousDigest = digest;
   await writeArtifacts(posts);
   await syncToolPages();
+  try {
+    await purgeCloudflareCache();
+  } catch (error) {
+    console.warn("[sync-notion] Cloudflare cache purge skipped/failed", error);
+  }
   console.log(`[sync-notion] Synced ${posts.length} posts from Notion`);
 }
 
