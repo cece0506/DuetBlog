@@ -3,5 +3,10 @@
     "name": "Rain Clock",
     "path": "tools/rain-clock.html",
     "description": "全屏雨滴 + 磨砂玻璃时钟工具页。"
+  },
+  {
+    "name": "波点图案生成器",
+    "path": "tools/polka-dot-generator.html",
+    "description": "按厘米尺寸、DPI 与梅花桩波点参数生成可下载 PNG。"
   }
 ]

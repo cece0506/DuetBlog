@@ -51,6 +51,53 @@ function setShowcaseDate() {
   `;
 }
 
+function setBusuanziFallback() {
+  const totalNode = document.getElementById("busuanzi_value_site_pv");
+  const visitorNode = document.getElementById("busuanzi_value_site_uv");
+  if (totalNode) {
+    totalNode.textContent = "0";
+  }
+  if (visitorNode) {
+    visitorNode.textContent = "0";
+  }
+}
+
+function canUseBusuanzi() {
+  const { hostname } = window.location;
+  if (!hostname || hostname.length > 22) {
+    return false;
+  }
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]") {
+    return false;
+  }
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    return false;
+  }
+  if (hostname.includes(":")) {
+    return false;
+  }
+  return hostname.includes(".");
+}
+
+function initBusuanzi() {
+  if (!document.getElementById("busuanzi_value_site_pv") || !document.getElementById("busuanzi_value_site_uv")) {
+    return;
+  }
+
+  if (!canUseBusuanzi()) {
+    setBusuanziFallback();
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
+  script.onerror = () => {
+    setBusuanziFallback();
+  };
+  document.body.appendChild(script);
+}
+
 async function loadPosts() {
   const response = await fetch("/data/posts.json");
   if (!response.ok) {
@@ -270,9 +317,11 @@ async function initHomeCalendar() {
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     setShowcaseDate();
+    initBusuanzi();
     void initHomeCalendar();
   }, { once: true });
 } else {
   setShowcaseDate();
+  initBusuanzi();
   void initHomeCalendar();
 }
