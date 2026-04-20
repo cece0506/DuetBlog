@@ -2,9 +2,75 @@ export {};
 
 type ToolItem = {
   name: string;
-  path: string;
+  path?: string;
+  url?: string;
+  host?: string;
   description?: string;
 };
+
+type ToolHostConfig = {
+  toolsOrigin?: string;
+  toolsOriginDev?: string;
+  toolsOriginProd?: string;
+};
+
+function normalizeOrigin(origin: string | undefined): string {
+  return (origin || "").trim().replace(/\/+$/, "");
+}
+
+function isLocalRuntime(): boolean {
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+    return true;
+  }
+  if (hostname.endsWith(".local")) {
+    return true;
+  }
+  if (/^10\./.test(hostname) || /^192\.168\./.test(hostname)) {
+    return true;
+  }
+  return /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
+}
+
+function resolveToolsOrigin(hostConfig: ToolHostConfig): string {
+  const local = isLocalRuntime();
+  if (local) {
+    return normalizeOrigin(hostConfig.toolsOriginDev || hostConfig.toolsOrigin);
+  }
+  return normalizeOrigin(hostConfig.toolsOriginProd || hostConfig.toolsOrigin);
+}
+
+async function loadToolHostConfig(): Promise<ToolHostConfig> {
+  try {
+    const response = await fetch("/data/tools-host.json");
+    if (!response.ok) {
+      return {};
+    }
+    return (await response.json()) as ToolHostConfig;
+  } catch {
+    return {};
+  }
+}
+
+function resolveToolHref(tool: ToolItem, hostConfig: ToolHostConfig): string {
+  const raw = (tool.url || tool.path || "").trim();
+  if (!raw) {
+    return "/pages/tools.html";
+  }
+  if (/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+  if (tool.host === "tools") {
+    const toolsOrigin = resolveToolsOrigin(hostConfig);
+    const path = raw.startsWith("/") ? raw : `/${raw}`;
+    return toolsOrigin ? `${toolsOrigin}${path}` : path;
+  }
+  return raw.startsWith("/") ? raw : `/${raw}`;
+}
+
+function isExternalHref(href: string): boolean {
+  return /^https?:\/\//i.test(href);
+}
 
 type WaveTrail = {
   points: Array<{ x: number; y: number }>;
@@ -95,22 +161,24 @@ async function loadToolsIntoMenus() {
   }
 
   try {
-    const response = await fetch("/data/tools.json");
-    if (!response.ok) {
+    const [toolsResponse, hostConfig] = await Promise.all([fetch("/data/tools.json"), loadToolHostConfig()]);
+    if (!toolsResponse.ok) {
       throw new Error("Failed to load tools menu");
     }
 
-    const tools = (await response.json()) as ToolItem[];
+    const tools = (await toolsResponse.json()) as ToolItem[];
     for (const menu of menus) {
       const items = tools
-        .map(
-          (tool) => `
-            <a class="tools-nav-item" href="/${tool.path}">
+        .map((tool) => {
+          const href = resolveToolHref(tool, hostConfig);
+          const externalAttrs = isExternalHref(href) ? ' target="_blank" rel="noopener noreferrer"' : "";
+          return `
+            <a class="tools-nav-item" href="${href}"${externalAttrs}>
               <strong>${tool.name}</strong>
               <span>${tool.description || ""}</span>
             </a>
-          `,
-        )
+          `;
+        })
         .join("");
 
       menu.innerHTML = `${items}<a class="tools-nav-item tools-nav-all" href="/pages/tools.html"><strong>All Tools</strong><span>进入工具页查看完整列表</span></a>`;
