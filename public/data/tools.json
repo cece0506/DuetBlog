@@ -2,13 +2,13 @@
   {
     "name": "Rain Clock",
     "host": "tools",
-    "url": "/rain-clock.html",
+    "url": "/rain-clock",
     "description": "全屏雨滴 + 磨砂玻璃时钟工具页。"
   },
   {
     "name": "波点图案生成器",
     "host": "tools",
-    "url": "/polka-dot-generator.html",
+    "url": "/polka-dot-generator",
     "description": "按厘米尺寸、DPI 与梅花桩波点参数生成可下载 PNG。"
   }
 ]
